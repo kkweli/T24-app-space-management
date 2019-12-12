@@ -1,0 +1,25 @@
+*-----------------------------------------------------------------------------
+* <Rating>-2</Rating>
+*-----------------------------------------------------------------------------
+    FUNCTION BACKUPFUNC(sDIRS,sEXTvAR)
+*"Total Directory records before:":sDIRS
+    INcONFIRM = DIR(sDIRS)
+    CRT "Making backup of directory :":sDIRS
+    SELbACK.CMD = "mv ":sDIRS:" ":sDIRS:sEXTvAR
+    PERFORM SELbACK.CMD CAPTURING output PASSDATA "1"
+    
+    CRT "Recreating new directory :":sDIRS
+    SELmKDR.CMD = "mkdir ":sDIRS
+    PERFORM SELmKDR.CMD CAPTURING output1 PASSDATA "2"
+    
+    CRT "Deleting backed directory :":sDIRS:sEXTvAR
+    SELrMV.CMD = "rm -Rf ":sDIRS:sEXTvAR
+    PERFORM SELrMV.CMD CAPTURING output2 PASSDATA "3"
+*"Total Directory records after:":sDIRS
+    AFcONFIRM = DIR(sDIRS)
+***-1 The first string is less than the second (Right justification)
+***0 means no changes
+    OK2.FLAG = COMPARE(INcONFIRM[0,3],AFcONFIRM[0,3],"R")
+    RETURN OK2.FLAG
+
+    END

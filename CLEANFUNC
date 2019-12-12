@@ -1,0 +1,18 @@
+*-----------------------------------------------------------------------------
+* <Rating>-2</Rating>
+*-----------------------------------------------------------------------------
+    FUNCTION CLEANFUNC(sEQUENCEID,vARIANTPARAM)
+*"Total Directory records before:":sEQUENCEID
+    INcONFIRM = DIR(sEQUENCEID)
+    CRT "Items older than ":vARIANTPARAM:" day(s) clear attempted :":sEQUENCEID
+    SELcLEAR.CMD = "find ":sEQUENCEID:" -type f -mtime +":vARIANTPARAM:" -exec rm {} +"
+    PERFORM SELcLEAR.CMD CAPTURING output PASSDATA "1"
+    
+*"Total Directory records after:":sEQUENCEID
+    AFcONFIRM = DIR(sEQUENCEID)
+***0 means no changes    
+***-1 The first string is less than the second (Right justification)
+    OK.FLAG = COMPARE(INcONFIRM[0,3],AFcONFIRM[0,3],"R")
+    RETURN OK.FLAG
+
+    END

@@ -1,0 +1,104 @@
+*-----------------------------------------------------------------------------
+* <Rating>-45</Rating>
+*-----------------------------------------------------------------------------
+    PROGRAM SBK.CLEAN.PROC
+************************************************************************************************************************************
+* Author        :George Wanjohi
+* Date created  :20191125
+* Version       :1.0
+* Description:  :Program to automate housekeeping on selected T24 directories
+*************************************************************************************************************************************
+
+    $INSERT I_COMMON
+    $INSERT I_EQUATE
+    GOSUB INIT
+    GOSUB CLEAN
+    GOSUB BACKUP
+    GOSUB REPORT
+    RETURN
+INIT:
+    fEXT = '_':OCONV(DATE(),'D2-'):"_OLD"
+    NLINE = CHARX(13):CHARX(10)
+*Build clean paths array
+    dIRpATHS = ''
+    dIRpATHS<-1> = '/app/t24/test/AUTO.MAILER'
+    dIRpATHS<-1> = '/app/t24/test/AML.EXTRACTS'
+    dIRpATHS<-1> = '/app/t24/test/&SAVEDLISTS&'
+    dIRpATHS<-1> = '/app/t24/test/CRM.EXTRACTS'
+    dIRpATHS<-1> = '/app/t24/test/SB.MIS'
+    dIRpATHS<-1> = '/app/t24/test/CREDIT.REPORTS'
+    dIRpATHS<-1> = '/app/t24/test/REPORT'
+    dIRpATHS<-1> = '/app/t24/test/F.INTELLI.OUTWARD'
+    dIRpATHS<-1> = '/app/t24/test/SBK.FLTFILE.EXTRACT'
+
+*Build clear paths array
+    dIRcLEARpATHS = ''
+    dIRcLEARpATHS<-1> = '/app/t24/R17_TAFC/log/default'
+    dIRcLEARpATHS<-1> = '/app/t24/bnk/mobresponse'
+    RETURN
+
+CLEAN:
+    DEFFUN CLEANFUNC()
+    LOOP
+        REMOVE Y.DIR.ID FROM dIRpATHS SETTING Y.DIR.ID.MARK
+    WHILE Y.DIR.ID : Y.DIR.ID.MARK
+        Y.FUNC.CD = CLEANFUNC(Y.DIR.ID,0)
+        *CRT Y.FUNC.CD;
+        IF Y.FUNC.CD EQ 0 THEN
+            CRT "Current Operation failed! No changes affected":NLINE
+        END ELSE
+            CRT "Current Operation finished O.K! Changes affected":NLINE
+        END
+    REPEAT
+    RETURN
+
+BACKUP:
+    DEFFUN BACKUPFUNC()
+    LOOP
+        REMOVE Y.DIR2.ID FROM dIRcLEARpATHS SETTING Y.DIR2.ID.MARK
+    WHILE Y.DIR2.ID : Y.DIR2.ID.MARK
+        Y.FUNC2.CD = BACKUPFUNC(Y.DIR2.ID,fEXT)
+        *CRT Y.FUNC2.CD;
+        IF Y.FUNC2.CD EQ 0 THEN
+            CRT "Current Operation failed! No changes affected":NLINE
+        END ELSE
+            CRT "Current Operation finished O.K! Changes affected":NLINE
+        END
+    REPEAT
+    RETURN
+
+REPORT:
+    OUT.FILE.NAME = 'SBK_WEEKLY_HOUSEKEEPN_':OCONV(DATE(),'D2-'):'_':TIME():'.txt'
+    OUT.DIR = 'AUTO.MAILER'
+    OPENSEQ OUT.DIR, OUT.FILE.NAME TO OUT.FILE.POINTER ELSE
+        CREATE OUT.FILE.POINTER ELSE
+        CRT 'Unable to create file ':OUT.DIR:OUT.FILE.NAME; ABORT
+    END
+    END
+
+    fSORT.CMD = 'sh TRAIN/fsize.sh'
+    EXECUTE fSORT.CMD CAPTURING Output PASSDATA "OK"
+    COLLECTDATA Sorting
+    lOGhEADER = ''
+    lOGhEADER<-1> = 'Created @ ':TIMEDATE()
+    lOGhEADER<-1>= 'By : ':SYSTEM(50)
+    lOGhEADER<-1>= 'Host : ':SYSTEM(1019)
+    lOGhEADER<-1>= '######################################'
+    lOGhEADER<-1>= Output
+
+    IF Sorting #" " THEN
+        LOOP
+            REMOVE Y.ARR.ID FROM lOGhEADER SETTING Y.ARR.ID.MARK
+        WHILE Y.ARR.ID : Y.ARR.ID.MARK
+            WRITESEQ Y.ARR.ID TO OUT.FILE.POINTER ELSE
+            CRT 'Write error to file : ':OUT.DIR:OUT.FILE.NAME
+        END
+    REPEAT
+    CLOSESEQ OUT.FILE.POINTER
+    CRT NLINE:'Procedures Complete!! Refer to log :':OUT.DIR:':':OUT.FILE.NAME:NLINE
+    END ELSE
+    CRT 'Failed to capture sorting command'
+    END
+
+    RETURN
+    END
