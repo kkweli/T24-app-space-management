@@ -3,7 +3,7 @@
 *-----------------------------------------------------------------------------
     PROGRAM SBK.CLEAN.PROC
 ************************************************************************************************************************************
-* Author        :George Wanjohi
+* Author        :George
 * Date created  :20191125
 * Version       :1.0
 * Description:  :Program to automate housekeeping on selected T24 directories
@@ -53,6 +53,7 @@ CLEAN:
     RETURN
 
 BACKUP:
+*call backup and clean function 
     DEFFUN BACKUPFUNC()
     LOOP
         REMOVE Y.DIR2.ID FROM dIRcLEARpATHS SETTING Y.DIR2.ID.MARK
@@ -75,8 +76,9 @@ REPORT:
         CRT 'Unable to create file ':OUT.DIR:OUT.FILE.NAME; ABORT
     END
     END
-
+*call bash aix script to do file structure sort by size and redirect output 
     fSORT.CMD = 'sh TRAIN/fsize.sh'
+    *execute and redirect output
     EXECUTE fSORT.CMD CAPTURING Output PASSDATA "OK"
     COLLECTDATA Sorting
     lOGhEADER = ''
